@@ -22922,7 +22922,7 @@ function labelledTextView(Label$1, Text) {
   javascriptInterfaceLibrary_umdExports.expectText("text to show", Text);
   return preact(() => m$3`
       <${vertical}>
-        <${Label}    value=${Label$1}>
+        <${Label}    value=${Label$1}/>
         <${TextView} value=${Text} style="width:560px; height:380px"/>
       </>
     `);

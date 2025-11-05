@@ -1,0 +1,33 @@
+{
+  "name": "notebook-bundle-for-generative-ai",
+  "description": "Code used by Starboard notebooks on generative AI found at www.rozek.de",
+  "version": "0.0.1",
+  "keywords": [],
+  "author": "Andreas Rozek",
+  "homepage": "https://github.com/rozek/notebook-bundle-for-generative-ai#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rozek/notebook-bundle-for-generative-ai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rozek/notebook-bundle-for-generative-ai/issues"
+  },
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/notebook-bundle-for-generative-ai.js",
+  "module": "./dist/notebook-bundle-for-generative-ai.js",
+  "types": "./dist/notebook-bundle-for-generative-ai.d.ts",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "javascript-interface-library": "^1.0.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}

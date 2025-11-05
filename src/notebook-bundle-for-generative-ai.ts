@@ -18,6 +18,14 @@
     expectURL,
   } from 'javascript-interface-library'
 
+  import { render, html }                              from 'htm/preact'
+  import { createContext, toChildArray, cloneElement } from 'preact'
+  import { createPortal }                              from 'preact/compat'
+  import { useId, useRef, useState, useEffect, useCallback, useMemo, useContext } from 'preact/hooks'
+  type VNode = any
+
+  import { useAutoAnimate } from '@formkit/auto-animate/preact'
+
   import * as sim from 'sim-components'
 
 /**** make some existing types indexable ****/
@@ -149,5 +157,29 @@ debugger
       clearTimeout(RequestTimer)
       return false
     }
+  }
+
+/**** preact ****/
+
+  export function preact (Callback:Function):HTMLElement {
+    expectFunction('preact function component',Callback)
+
+    const Result:HTMLElement = document.createElement('div')
+      render(html`<${Callback}/>`,Result)
+    return Result
+  }
+
+/**** labelledTextView ****/
+
+  export function labelledTextView (Label:string, Text:string):HTMLElement {
+    expectTextline   ('label',Label)
+    expectText('text to show',Text)
+
+    return preact(() => html`
+      <${sim.vertical}>
+        <${sim.Label}    value=${Label}>
+        <${sim.TextView} value=${Text} style="width:560px; height:380px"/>
+      </>
+    `)
   }
 

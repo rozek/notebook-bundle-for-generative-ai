@@ -177,7 +177,7 @@ debugger
 
     return preact(() => html`
       <${sim.vertical}>
-        <${sim.Label}    value=${Label}>
+        <${sim.Label}    value=${Label}/>
         <${sim.TextView} value=${Text} style="width:560px; height:380px"/>
       </>
     `)

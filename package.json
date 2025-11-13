@@ -25,7 +25,7 @@
   "dependencies": {
     "htm": "github:rozek/htm",
     "preact": "github:rozek/preact",
-    "sim-components": "github:rozek/sim-components",
+    "aim-components": "github:rozek/aim-components",
     "@formkit/auto-animate": "^0.9.0",
     "highlight.js": "^11.11.1",
     "javascript-interface-library": "github:rozek/javascript-interface-library",

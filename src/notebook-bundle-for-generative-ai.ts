@@ -570,16 +570,16 @@ debugger
       'http://localhost:8080':true, 'http:/localhost:8888':true,
       'http://[::1]:8080':true,     'http:/[::1]:8888':true,
     },
-    ResultBlacklist:[ 'https://www.sjmed.com' ]
+    ResultBlacklist:{ 'https://www.sjmed.com':true },
   }
 
-  function preserveSearXNGFilterLists ():void {
+  export function preserveSearXNGFilterLists ():void {
     localStorage['SearXNG-FilterLists'] = JSON.stringify(SearXNGFilterLists)
   }
 
 /**** restoreSearXNGFilterLists ****/
 
-  function restoreSearXNGFilterLists ():void {
+  export function restoreSearXNGFilterLists ():void {
     if (localStorage['SearXNG-FilterLists'] != null) {
       try {
         const Candidate:any = JSON.parse(localStorage['SearXNG-FilterLists'])
@@ -609,6 +609,18 @@ debugger
     return JSON.parse(JSON.stringify(_SearXNGFilterLists))
   }
 
+/**** clearSearXNGServerBlacklist ****/
+
+  export function clearSearXNGServerBlacklist ():void {
+    _SearXNGFilterLists.ServerBlacklist = {}
+  }
+
+/**** SearXNGServerBlacklist ****/
+
+  export function SearXNGServerBlacklist ():Indexable {
+    return { ..._SearXNGFilterLists.ServerBlacklist }
+  }
+
 /**** [un]blacklistSearXNGServer ****/
 
   export function blacklistSearXNGServer (ServerURL:AIM_URL):void {
@@ -626,6 +638,18 @@ debugger
   export function SearXNGServerIsBlacklisted (ServerURL:AIM_URL):boolean {
     expectURL('server URL',ServerURL)
     return (ServerURL in _SearXNGFilterLists.ServerBlacklist)
+  }
+
+/**** clearSearXNGServerWhitelist ****/
+
+  export function clearSearXNGServerWhitelist ():void {
+    _SearXNGFilterLists.ServerWhitelist = {}
+  }
+
+/**** SearXNGServerWhitelist ****/
+
+  export function SearXNGServerWhitelist ():Indexable {
+    return { ..._SearXNGFilterLists.ServerWhitelist }
   }
 
 /**** [un]whitelistSearXNGServer ****/
@@ -647,12 +671,36 @@ debugger
     return (ServerURL in _SearXNGFilterLists.ServerWhitelist)
   }
 
+/**** clearSearXNGResultBlacklist ****/
+
+  export function clearSearXNGResultBlacklist ():void {
+    _SearXNGFilterLists.ResultBlacklist = {}
+  }
+
+/**** SearXNGResultBlacklist ****/
+
+  export function SearXNGResultBlacklist ():Indexable {
+    return { ..._SearXNGFilterLists.ResultBlacklist }
+  }
+
+/**** [un]blacklistSearXNGResult ****/
+
+  export function blacklistSearXNGResult (ResultURLPrefix:AIM_Textline):void {
+    expectTextline('result URL prefix',ResultURLPrefix)
+    _SearXNGFilterLists.ResultBlacklist[ResultURLPrefix] = true
+  }
+
+  export function unblacklistSearXNGResult (ResultURLPrefix:AIM_Textline):void {
+    expectTextline('result URL prefix',ResultURLPrefix)
+    delete _SearXNGFilterLists.ResultBlacklist[ResultURLPrefix]
+  }
+
 /**** SearXNGResultIsBlacklisted ****/
 
   export function SearXNGResultIsBlacklisted (ResultURL:AIM_URL):boolean {
     expectURL('result URL',ResultURL)
-    return _SearXNGFilterLists.ResultBlacklist.some(
-      (forbiddenURL:AIM_URL) => ResultURL.startsWith(forbiddenURL)
+    return Object.keys(_SearXNGFilterLists.ResultBlacklist).some(
+      (forbiddenURLPrefix:AIM_Textline) => ResultURL.startsWith(forbiddenURLPrefix)
     )
   }
 

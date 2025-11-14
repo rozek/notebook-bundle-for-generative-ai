@@ -22352,8 +22352,13 @@ installStylesheetFor("aim-component.tabular", `
     .aim-component.tabular > colgroup > col.shrinking { width:1px }
   `);
 installStylesheetFor("aim-component.selective", `
+    .aim-component.selective {
+      display:flex ! important; flex-flow:column nowrap ! important;
+        align-items:stretch ! important; justify-content:stretch ! important;
+      flex:1 0 auto;
+    }
     .aim-component.selective > * {
-      display:block; position:absolute;
+      display:block; position:relative;
       left:0px; top:0px; right:auto; bottom:auto; width:100%; height:100%;
     }
   `);
@@ -23929,10 +23934,12 @@ async function SearXNGServers(OptionSet = {}) {
       }
     );
     if (Response2.ok) {
-      const URLList = Object.keys((await Response2.json()).instances).filter((Server) => !SearXNGServerIsBlacklisted(Server));
-      if (javascriptInterfaceLibrary_umdExports.ValueIsListSatisfying(URLList, javascriptInterfaceLibrary_umdExports.ValueIsURL)) {
-        return URLList;
+      const JSONResponse = await Response2.json();
+      if (!javascriptInterfaceLibrary_umdExports.ValueIsPlainObject(JSONResponse) || !javascriptInterfaceLibrary_umdExports.ValueIsPlainObject(JSONResponse.instances)) {
+        return [];
       }
+      const URLList = Object.keys(JSONResponse.instances);
+      return URLList.filter(SearXNGServerIsAcceptable);
     }
   } catch (Signal2) {
     if (Signal2.name === "AbortError") {
@@ -23946,28 +23953,6 @@ async function SearXNGServers(OptionSet = {}) {
     "InternalError: SearXNG server scan failed with HTTP status " + Response2.status + " " + StatusText
   );
   return [];
-}
-const SearXNGServerBlackList = /* @__PURE__ */ Object.create(null);
-function blacklistSearXNGServer(ServerURL) {
-  javascriptInterfaceLibrary_umdExports.expectURL("server URL", ServerURL);
-  SearXNGServerBlackList[ServerURL] = true;
-}
-function unblacklistSearXNGServer(ServerURL) {
-  javascriptInterfaceLibrary_umdExports.expectURL("server URL", ServerURL);
-  delete SearXNGServerBlackList[ServerURL];
-}
-function SearXNGServerIsBlacklisted(ServerURL) {
-  javascriptInterfaceLibrary_umdExports.expectURL("server URL", ServerURL);
-  return ServerURL in SearXNGServerBlackList;
-}
-const SearXNGResultBlackList = [
-  "https://www.sjmed.com"
-];
-function SearXNGResultIsBlacklisted(ResultURL) {
-  javascriptInterfaceLibrary_umdExports.expectURL("result URL", ResultURL);
-  return SearXNGResultBlackList.some(
-    (forbiddenURL) => ResultURL.startsWith(forbiddenURL)
-  );
 }
 let _SearXNGServers = [];
 async function nextSearXNGServer() {
@@ -24000,7 +23985,7 @@ async function SearXNGQuery(SearXNGServer, SearchPhrase) {
     if (Response2.ok) {
       const HTML = await Response2.text();
       let URLList = Array.from(HTML.matchAll(/<h3><a href="([^"]+)"/g)).map((Match) => Match[1]).filter((URL2) => URL2 != null && URL2.trim() !== "");
-      let filteredURLList = URLList.filter((URL2) => !SearXNGResultIsBlacklisted(URL2));
+      let filteredURLList = URLList.filter(SearXNGResultIsAcceptable);
       if (filteredURLList.length === 0 && URLList.length > 0) {
         blacklistSearXNGServer(SearXNGServer);
       }
@@ -24023,6 +24008,72 @@ async function SearXNGQuery(SearXNGServer, SearchPhrase) {
   }
   return [];
 }
+const _SearXNGFilterLists = {
+  ServerBlacklist: {},
+  ServerWhitelist: {
+    "http://127.0.0.1:8080": true,
+    "http://127.0.0.1:8888": true,
+    "http://localhost:8080": true,
+    "http:/localhost:8888": true,
+    "http://[::1]:8080": true,
+    "http:/[::1]:8888": true
+  },
+  ResultBlacklist: ["https://www.sjmed.com"]
+};
+function restoreSearXNGFilterLists() {
+  if (localStorage["SearXNG-FilterLists"] != null) {
+    try {
+      const Candidate = JSON.parse(localStorage["SearXNG-FilterLists"]);
+      if (javascriptInterfaceLibrary_umdExports.ValueIsObject(Candidate) && javascriptInterfaceLibrary_umdExports.ValueIsObject(Candidate.ServerBlacklist) && Object.keys(Candidate.ServerBlacklist).every(javascriptInterfaceLibrary_umdExports.ValueIsURL) && javascriptInterfaceLibrary_umdExports.ValueIsObject(Candidate.ServerWhitelist) && Object.keys(Candidate.ServerWhitelist).every(javascriptInterfaceLibrary_umdExports.ValueIsURL) && javascriptInterfaceLibrary_umdExports.ValueIsListSatisfying(Candidate.ResultBlacklist, javascriptInterfaceLibrary_umdExports.ValueIsTextline)) {
+        const { ServerBlacklist, ServerWhitelist, ResultBlacklist } = Candidate;
+        Object.assign(_SearXNGFilterLists, { ServerBlacklist, ServerWhitelist, ResultBlacklist });
+      }
+      console.warn('localStorage item "SearXNG-FilterLists" has an invalid format');
+    } catch (Signal) {
+      console.warn('"restoreSearXNGFilterLists" failed with ' + Signal);
+    }
+  }
+}
+restoreSearXNGFilterLists();
+function SearXNGFilterLists() {
+  return JSON.parse(JSON.stringify(_SearXNGFilterLists));
+}
+function blacklistSearXNGServer(ServerURL) {
+  javascriptInterfaceLibrary_umdExports.expectURL("server URL", ServerURL);
+  _SearXNGFilterLists.ServerBlacklist[ServerURL] = true;
+}
+function unblacklistSearXNGServer(ServerURL) {
+  javascriptInterfaceLibrary_umdExports.expectURL("server URL", ServerURL);
+  delete _SearXNGFilterLists.ServerBlacklist[ServerURL];
+}
+function SearXNGServerIsBlacklisted(ServerURL) {
+  javascriptInterfaceLibrary_umdExports.expectURL("server URL", ServerURL);
+  return ServerURL in _SearXNGFilterLists.ServerBlacklist;
+}
+function whitelistSearXNGServer(ServerURL) {
+  javascriptInterfaceLibrary_umdExports.expectURL("server URL", ServerURL);
+  _SearXNGFilterLists.ServerWhitelist[ServerURL] = true;
+}
+function unwhitelistSearXNGServer(ServerURL) {
+  javascriptInterfaceLibrary_umdExports.expectURL("server URL", ServerURL);
+  delete _SearXNGFilterLists.ServerWhitelist[ServerURL];
+}
+function SearXNGServerIsWhitelisted(ServerURL) {
+  javascriptInterfaceLibrary_umdExports.expectURL("server URL", ServerURL);
+  return ServerURL in _SearXNGFilterLists.ServerWhitelist;
+}
+function SearXNGResultIsBlacklisted(ResultURL) {
+  javascriptInterfaceLibrary_umdExports.expectURL("result URL", ResultURL);
+  return _SearXNGFilterLists.ResultBlacklist.some(
+    (forbiddenURL) => ResultURL.startsWith(forbiddenURL)
+  );
+}
+function SearXNGServerIsAcceptable(ServerURL) {
+  return javascriptInterfaceLibrary_umdExports.ValueIsURL(ServerURL) && ((ServerURL.startsWith("https://") || SearXNGServerIsWhitelisted(ServerURL)) && !SearXNGServerIsBlacklisted(ServerURL));
+}
+function SearXNGResultIsAcceptable(ResultURL) {
+  return javascriptInterfaceLibrary_umdExports.ValueIsURL(ResultURL) && !SearXNGResultIsBlacklisted(ResultURL);
+}
 function preact(Callback) {
   javascriptInterfaceLibrary_umdExports.expectFunction("preact function component", Callback);
   const Result = document.createElement("div");
@@ -24043,11 +24094,13 @@ export {
   AIM_AICapabilities,
   DescriptionOfHTTPStatus,
   HTTPMessageForStatus,
+  SearXNGFilterLists,
   SearXNGQuery,
-  SearXNGResultBlackList,
+  SearXNGResultIsAcceptable,
   SearXNGResultIsBlacklisted,
-  SearXNGServerBlackList,
+  SearXNGServerIsAcceptable,
   SearXNGServerIsBlacklisted,
+  SearXNGServerIsWhitelisted,
   SearXNGServers,
   ServerIsReachable,
   TextFilledFrom,
@@ -24074,5 +24127,7 @@ export {
   preact,
   throwError,
   unblacklistSearXNGServer,
-  unfencedText
+  unfencedText,
+  unwhitelistSearXNGServer,
+  whitelistSearXNGServer
 };

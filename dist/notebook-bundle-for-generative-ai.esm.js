@@ -22617,7 +22617,7 @@ installStylesheetFor("aim-component.icon", `
 installStylesheetFor("aim-component.fa-icon", `
     .aim-component.fa-icon {
       width:24px ! important; height:24px ! important;
-      font-size:24px; line-height:24px; text-align:center;
+      font-size:18px; line-height:24px; text-align:center;
       pointer-events:auto;
     }
 
@@ -24018,8 +24018,11 @@ const _SearXNGFilterLists = {
     "http://[::1]:8080": true,
     "http:/[::1]:8888": true
   },
-  ResultBlacklist: ["https://www.sjmed.com"]
+  ResultBlacklist: { "https://www.sjmed.com": true }
 };
+function preserveSearXNGFilterLists() {
+  localStorage["SearXNG-FilterLists"] = JSON.stringify(SearXNGFilterLists);
+}
 function restoreSearXNGFilterLists() {
   if (localStorage["SearXNG-FilterLists"] != null) {
     try {
@@ -24038,6 +24041,12 @@ restoreSearXNGFilterLists();
 function SearXNGFilterLists() {
   return JSON.parse(JSON.stringify(_SearXNGFilterLists));
 }
+function clearSearXNGServerBlacklist() {
+  _SearXNGFilterLists.ServerBlacklist = {};
+}
+function SearXNGServerBlacklist() {
+  return { ..._SearXNGFilterLists.ServerBlacklist };
+}
 function blacklistSearXNGServer(ServerURL) {
   javascriptInterfaceLibrary_umdExports.expectURL("server URL", ServerURL);
   _SearXNGFilterLists.ServerBlacklist[ServerURL] = true;
@@ -24049,6 +24058,12 @@ function unblacklistSearXNGServer(ServerURL) {
 function SearXNGServerIsBlacklisted(ServerURL) {
   javascriptInterfaceLibrary_umdExports.expectURL("server URL", ServerURL);
   return ServerURL in _SearXNGFilterLists.ServerBlacklist;
+}
+function clearSearXNGServerWhitelist() {
+  _SearXNGFilterLists.ServerWhitelist = {};
+}
+function SearXNGServerWhitelist() {
+  return { ..._SearXNGFilterLists.ServerWhitelist };
 }
 function whitelistSearXNGServer(ServerURL) {
   javascriptInterfaceLibrary_umdExports.expectURL("server URL", ServerURL);
@@ -24062,10 +24077,24 @@ function SearXNGServerIsWhitelisted(ServerURL) {
   javascriptInterfaceLibrary_umdExports.expectURL("server URL", ServerURL);
   return ServerURL in _SearXNGFilterLists.ServerWhitelist;
 }
+function clearSearXNGResultBlacklist() {
+  _SearXNGFilterLists.ResultBlacklist = {};
+}
+function SearXNGResultBlacklist() {
+  return { ..._SearXNGFilterLists.ResultBlacklist };
+}
+function blacklistSearXNGResult(ResultURLPrefix) {
+  javascriptInterfaceLibrary_umdExports.expectTextline("result URL prefix", ResultURLPrefix);
+  _SearXNGFilterLists.ResultBlacklist[ResultURLPrefix] = true;
+}
+function unblacklistSearXNGResult(ResultURLPrefix) {
+  javascriptInterfaceLibrary_umdExports.expectTextline("result URL prefix", ResultURLPrefix);
+  delete _SearXNGFilterLists.ResultBlacklist[ResultURLPrefix];
+}
 function SearXNGResultIsBlacklisted(ResultURL) {
   javascriptInterfaceLibrary_umdExports.expectURL("result URL", ResultURL);
-  return _SearXNGFilterLists.ResultBlacklist.some(
-    (forbiddenURL) => ResultURL.startsWith(forbiddenURL)
+  return Object.keys(_SearXNGFilterLists.ResultBlacklist).some(
+    (forbiddenURLPrefix) => ResultURL.startsWith(forbiddenURLPrefix)
   );
 }
 function SearXNGServerIsAcceptable(ServerURL) {
@@ -24096,11 +24125,14 @@ export {
   HTTPMessageForStatus,
   SearXNGFilterLists,
   SearXNGQuery,
+  SearXNGResultBlacklist,
   SearXNGResultIsAcceptable,
   SearXNGResultIsBlacklisted,
+  SearXNGServerBlacklist,
   SearXNGServerIsAcceptable,
   SearXNGServerIsBlacklisted,
   SearXNGServerIsWhitelisted,
+  SearXNGServerWhitelist,
   SearXNGServers,
   ServerIsReachable,
   TextFilledFrom,
@@ -24110,7 +24142,11 @@ export {
   allowISOLanguageCode,
   allowedAbortSignal,
   allowedISOLanguageCode,
+  blacklistSearXNGResult,
   blacklistSearXNGServer,
+  clearSearXNGResultBlacklist,
+  clearSearXNGServerBlacklist,
+  clearSearXNGServerWhitelist,
   expectAbortSignal,
   expectISOLanguageCode,
   expectedAbortSignal,
@@ -24125,7 +24161,10 @@ export {
   labelledTextView,
   nextSearXNGServer,
   preact,
+  preserveSearXNGFilterLists,
+  restoreSearXNGFilterLists,
   throwError,
+  unblacklistSearXNGResult,
   unblacklistSearXNGServer,
   unfencedText,
   unwhitelistSearXNGServer,
